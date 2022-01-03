@@ -1,4 +1,4 @@
-# CarHireManagementSystem
+# Car Hire Management System
 
 The main focus of the business is renting cars and vans, and the database is to manage the booking system.  
 
@@ -72,12 +72,11 @@ python api.py
 ```
 Post: 
 {
-	"name":"wael",
-	"phone":"01094401355",
-  "mail":"wael.ashraf.anwar@gmail.com",
-  "vehicle_category":"family car carry up to 7",
-  "date_of_hire":"2022-01-05",
-  "date_of_ret":"2022-01-10"
-	
+ "name":"wael",
+ "phone":"01094401355",
+ "mail":"wael.ashraf.anwar@gmail.com",
+ "vehicle_category":"family car carry up to 7",
+ "date_of_hire":"2022-01-05",
+ "date_of_ret":"2022-01-10"	
 }
  ```
