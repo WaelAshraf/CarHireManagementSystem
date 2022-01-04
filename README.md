@@ -1,6 +1,12 @@
 # Car Hire Management System
 
-The main focus of the business is renting cars and vans, and the database is to manage the booking system.  
+The main focus of the business is renting cars and vans, and the database is to manage the booking system.
+- Notes:
+  - Tests Done using Postman
+  - Send confirmation mail is implemented but it is not tested with real mail
+  - Daily Tasks is implemented but it is not tested as interval schedular 
+
+
 
 Table of Contents
 =================
