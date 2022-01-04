@@ -10,23 +10,36 @@ import smtplib
 from apscheduler.schedulers.background import BackgroundScheduler
 
 CORS(app)
-
+Invoices=[]
 def daily_task():
     today = date.today()
     now=today.strftime("%Y-%m-%d")
     cur=None
     try: 
+        #Invoices and Report Printing
         cur=mysql.connection.cursor()
         cur.execute('select c.name,v.category,v.hiring_price,b.date_of_hire,b.date_of_ret from Car_Hire_Management_System.bookings as b  inner join Car_Hire_Management_System.vehicles as v on b.vehicle_id=v.vehicle_id inner join Car_Hire_Management_System.customers as c on b.customer_id=c.customer_id where b.date_of_hire=%s;',(str(now)))
         Invoices=cur.fetchall()
-        print (jsonify(Invoices))
-       
+        Report=[]
+        for i in range (len(Invoices)):  
+            Report_item={
+                "Customer Name":Invoices[i][0],
+                "Vehicle Category":Invoices[i][1],
+                "Vehicle Hiring Price":Invoices[i][2],
+                "Date of Hire":Invoices[i][3],
+                "Date of Return":Invoices[i][4],
+            }
+            Report.append(Report_item)
+        print (jsonify(Report))
+        
+       #when date of return is met the vehicle returns available again
         cur.execute('select v.vehicle_id from Car_Hire_Management_System.bookings as b  inner join Car_Hire_Management_System.vehicles as v on b.vehicle_id=v.vehicle_id inner join Car_Hire_Management_System.customers as c on b.customer_id=c.customer_id where b.date_of_ret=%s;',(str(now)))
         rows=cur.fetchall()
         for i in range(len(rows)):  
             cur.execute('update Car_Hire_Management_System.vehicles SET is_available = 1 WHERE vehicle_id = %s ',(str(rows[i][0])))
             mysql.connection.commit() 
-        
+            
+        #when date of hire is met customer pay the hiring price
         cur.execute('select c.customer_id from Car_Hire_Management_System.bookings as b  inner join Car_Hire_Management_System.vehicles as v on b.vehicle_id=v.vehicle_id inner join Car_Hire_Management_System.customers as c on b.customer_id=c.customer_id where b.date_of_hire=%s;',(str(now)))
         rows=cur.fetchall()
         for i in range(len(rows)):  
@@ -161,12 +174,12 @@ def customer():
             cur.execute('select * from Car_Hire_Management_System.customers;')
             rows=cur.fetchall()
             res=jsonify(rows)
-            return res
+            return res,jsonify(Invoices)
         except Exception as e:
             print(e)
         finally:
             cur.close()
-    # Create Customer
+    # Create Customer and its bookings
     elif request.method == 'POST':
         try: 
             data=request.json
@@ -200,20 +213,40 @@ def one_customer(id):
         cursor = mysql.connection.cursor()
         cursor.execute('DELETE FROM Car_Hire_Management_System.customers WHERE customer_id = %s', (id))
         mysql.connection.commit()
+        cursor.execute('DELETE FROM Car_Hire_Management_System.bookings WHERE customer_id = %s', (id))
+        mysql.connection.commit()
         cursor.close()
         return jsonify({'status': 'Customer with ID= '+id+' is deleted Successfully!'})
 
     # UPDATE a Customer by id
     if request.method == 'PUT':
-        body = request.json
-        name = body['name']
-        mail = body['mail']
-        phone= body['phone']
-
+        data = request.json
+        name = data['name']
+        mail = data['mail']
+        phone= data['phone']
         cursor = mysql.connection.cursor()
         cursor.execute('UPDATE Car_Hire_Management_System.customers SET name = %s, mail = %s, phone=%s WHERE customer_id = %s', (name, mail, phone,id))
         mysql.connection.commit()
         cursor.close()
         return jsonify({'status': 'Customer with ID= '+id+' is updated Successfully!'})
+    
+@app.route('/api/customer/edit/<string:id>', methods=['PUT'])
+def edit_customer(id):
+    # UPDATE a existing Customer new Vehicle Rental booking by id
+    if request.method == 'PUT':
+        data = request.json
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT * FROM Car_Hire_Management_System.customers WHERE customer_id = %s', (id))
+        row = cursor.fetchone()
+        vehicle_id=check_vehicle_availability(data['vehicle_category'])
+        if vehicle_id==False:
+            return {"Message":"No '"+data['vehicle_category']+"' available right now"}
+        msg=validate_dates(row[1],data['vehicle_category'],row[3],row[2],data['date_of_hire'],data['date_of_ret'])
+        if not msg:
+            return {"Message":msg}
+        res=add_booking(id,vehicle_id[0],data['date_of_hire'],data['date_of_ret'])
+        if res:
+            return jsonify({'status': 'Customer with ID= '+id+' is updated Successfully!'})
+        return jsonify({'status': 'Failed update customer'})
 if __name__=="__main__":
     app.run()
