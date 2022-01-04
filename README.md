@@ -48,7 +48,6 @@ pip install flask_mysqldb
 - Create car_hire_managment_system Database then run mysql.sql script in it
 
 ### Step 2: Run Flask Server
-
 ```
 python api.py
 ```
@@ -62,7 +61,7 @@ python api.py
     - "date_of_hire"
     - "date_of_ret"
     
- - Send get request to http://127.0.0.1:5000/api/customer With "/api/customer/" as end point : to get all customers
+ - Send get request to http://127.0.0.1:5000/api/customer With "/api/customer/" as end point : to get all customers and Invoices if any
  - Send get request to http://127.0.0.1:5000/api/customer/:id With "/api/customer/:id" as end point : to get customer by id
  - Send delete request to http://127.0.0.1:5000/api/customer/:id With "/api/customer/:id" as end point : to delete customer and its bookings by id
  - Send put request to http://127.0.0.1:5000/api/customer/:id With "/api/customer/:id" as end point : to upate customer info by id with the following body tags:  
